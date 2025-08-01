@@ -30,6 +30,7 @@
                         <form action="{{ route('frontend.cart.add') }}" method="POST" class="d-flex justify-content-between align-items-center add-to-cart-form" id="add-to-cart-form-{{ $product->product_id }}">
                             @csrf
                             <input type="hidden" name="product_id" value="{{ $product->product_id }}">
+                            <input type="number" class="input-quantity" value="1" min="1" data-stock="{{ $product->stock_quantity }}" style="display: none;">
                             <button type="button" class="btn btn-success w-100 position-relative d-flex align-items-center justify-content-center add-to-cart-btn" onclick="checkLoginAndAddToCart({{ $product->product_id }})">
                                 Add to Cart
                                 <i class="fas fa-cart-plus ms-3" style="font-size: 18px;"></i>
@@ -42,7 +43,12 @@
             <p class="text-center">No products found.</p>
         @endforelse
     </div>
-    
+    <div id="custom-alert" class="alert-overlay">
+        <div class="alert-box">
+            <p id="alert-message"></p>
+            <button onclick="closeAlert()">Close</button>
+        </div>
+    </div>
     <!-- Modal message -->
     <div id="login-message" class="modal-message">
         <div class="modal-content">
@@ -93,29 +99,67 @@
             margin: 0 10px;
         }
     </style>
-    
-    <script>
-        function checkLoginAndAddToCart(productId) {
-            @if(Auth::check())
-                // If user is logged in, submit the specific form related to this product
-                var form = document.getElementById('add-to-cart-form-' + productId);
-                form.submit();
-            @else
-                // Show the modal message
-                var messageBox = document.getElementById('login-message');
-                messageBox.style.display = 'flex';  // Show the modal
-            @endif
-        }
+<script>
+    function checkLoginAndAddToCart(productId) {
+        const form = document.getElementById('add-to-cart-form-' + productId);
+        const quantity = 1;
+        const productInputValue = form.querySelector('input[name="product_id"]').value;
 
-        function closeModal() {
-            var messageBox = document.getElementById('login-message');
-            messageBox.style.display = 'none';  // Hide the modal
-        }
+        fetch('{{ route('frontend.cart.check-stock') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                product_id: productInputValue,
+                quantity: quantity
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Stock response:', data);
+            if (data.stock_available) {
+                @if(Auth::check())
+                    form.submit();
+                @else
+                    showLoginModal();
+                @endif
+            } else {
+                showAlert("Sorry, not enough stock available!");
+            }
+        })
+        .catch(error => {
+            console.error('Stock check failed:', error);
+        });
+    }
 
-        function redirectToLogin() {
-            window.location.href = "{{ route('login') }}";  // Redirect to the login page
+    function showAlert(message) {
+        const alertBox = document.getElementById("custom-alert");
+        const alertMessage = document.getElementById("alert-message");
+        alertMessage.innerText = message;
+        alertBox.style.display = 'flex';
+    }
+
+    function showLoginModal() {
+        const messageBox = document.getElementById('login-message');
+        if (messageBox) {
+            messageBox.style.display = 'flex';
         }
-    </script>
+    }
+
+    function closeModal() {
+        const messageBox = document.getElementById('login-message');
+        if (messageBox) {
+            messageBox.style.display = 'none';
+        }
+    }
+
+    function redirectToLogin() {
+        window.location.href = "{{ route('login') }}";
+    }
+</script>
+
 
 </div>
 @endsection

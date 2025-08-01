@@ -2,15 +2,15 @@
  <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
     <a href="{{url('/dashboard')}}" class="brand-link">
-      <img src="{{asset('backend/dist/img/AdminLTELogo.png')}}" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+      <img src="{{asset('backend/dist/img/avatar4.png')}}" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
       <span class="brand-text font-weight-light">Admin CMA</span>
     </a>
 
     <!-- Sidebar -->
     <div class="sidebar">
-      <div class="image d-flex justify-content-center">
+      {{-- <div class="image d-flex justify-content-center">
         <img src="{{asset('backend/dist/img/avatar4.png')}}" class="img-circle elevation-2" alt="User Image" style="width: 50px; height: 50px;">
-      </div>
+      </div> --}}
       <!-- Sidebar user panel (optional) -->
       <div class="user-panel mt-3 pb-3 mb-3 d-flex flex-column align-items-start">
         <div class="d-flex justify-content-between w-100">
@@ -61,8 +61,8 @@
              
             </ul>
           </li>
-          <li class="nav-item {{ request()->is('product') || request()->is('admin/bookings') || request()->is('order') || request()->is('review*') || request()->is('user')? 'menu-open' : '' }}">
-            <a href="#" class="nav-link {{ request()->is('product') || request()->is('admin/bookings') || request()->is('order') || request()->is('review') || request()->is('user')? 'active' : '' }}">
+          <li class="nav-item {{ request()->is('product') || request()->is('admin/bookings') || request()->is('order') || request()->is('review') || request()->is('stocks*') || request()->is('user')? 'menu-open' : '' }}">
+            <a href="#" class="nav-link {{ request()->is('product') || request()->is('admin/bookings') || request()->is('order') || request()->is('review')|| request()->is('stocks') || request()->is('user')? 'active' : '' }}">
               <i class="fas fa-cog"></i>
               <p>
                 Management
@@ -72,25 +72,31 @@
             <ul class="nav nav-treeview">
               <li class="nav-item">
                 <a href="{{url('/user')}}" class="nav-link {{ request()->is('user') ? 'active' : '' }}">
-                  <i class="far fa-circle nav-icon"></i>
+                  <i class="fas fa-users"></i>
                   <p>User</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{url('/product')}}" class="nav-link {{ request()->is('product') ? 'active' : '' }}">
-                  <i class="far fa-circle nav-icon"></i>
+                  <i class="fab fa-product-hunt"></i>
                   <p>Product</p>
                 </a>
               </li>
               <li class="nav-item">
+                <a href="{{url('/stocks')}}" class="nav-link {{ request()->is('stocks') ? 'active' : '' }}">
+                  <i class="fas fa-store"></i>
+                  <p>Stock In/Out</p>
+                </a>
+              </li>
+              <li class="nav-item">
                 <a href="{{url('/admin/bookings')}}" class="nav-link {{ request()->is('admin/bookings*') ? 'active' : '' }}">
-                  <i class="far fa-circle nav-icon"></i>
+                  <i class="fas fa-inbox"></i>
                   <p>MailBox</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="{{url('/order')}}" class="nav-link {{ request()->is('order*') ? 'active' : '' }}">
-                  <i class="far fa-circle nav-icon"></i>
+                  <i class="fas fa-store-slash"></i>
                   <p>ordered</p>
                 </a>
               </li>

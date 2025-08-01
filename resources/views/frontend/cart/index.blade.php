@@ -39,7 +39,9 @@
                         $discount = $itemTotal * 0.10;  
                     }
                     $itemGrandTotal = $itemTotal - $discount; 
-                    $grandTotal += $itemGrandTotal;  
+                    $grandTotal += $itemGrandTotal; 
+
+                    $product = \App\Models\Product::find($productId);
                 @endphp
                 <tr>
                     <td>
@@ -51,28 +53,61 @@
                             @csrf
                             <div class="input-group">
                                 <button type="button" class="btn btn-update btn-sm" onclick="updateQuantity(this, -1)">-</button>
-                                <input type="number" name="quantity" value="{{ $item['quantity'] }}" min="1" class="form-control input-quantity" onchange="updateQuantityFromInput(this)" readonly>
+                                <input type="number" name="quantity" value="{{ $item['quantity'] }}" min="1" class="form-control input-quantity" data-stock="{{ $product->stock_quantity }}" onchange="updateQuantityFromInput(this)" readonly>
                                 <button type="button" class="btn btn-update btn-sm" onclick="updateQuantity(this, 1)">+</button>
                                 <button type="submit" class="btn btn-update-submit btn-sm">Update</button>
                             </div>
                         </form>
-                        
+                        <div id="custom-alert" class="alert-overlay">
+                            <div class="alert-box">
+                                <p id="alert-message"></p>
+                                <button onclick="closeAlert()">Close</button>
+                            </div>
+                        </div>
                         <script>
+                           function showAlert(message) {
+                            var alertBox = document.getElementById("custom-alert");
+                            var alertMessage = document.getElementById("alert-message");
+                            alertMessage.innerText = message;
+                            alertBox.style.display = 'flex';
+                        }
+
+                        function closeAlert() {
+                            var alertBox = document.getElementById("custom-alert");
+                            alertBox.style.display = 'none';
+                        }
+
                         function updateQuantity(button, amount) {
                             var quantityInput = button.parentElement.querySelector(".input-quantity");
                             var currentQuantity = parseInt(quantityInput.value);
+                            var stockQuantity = parseInt(quantityInput.getAttribute("data-stock")); // Get stock quantity from data-stock
+
                             var newQuantity = currentQuantity + amount;
+
+                            // Check if new quantity exceeds stock quantity
+                            if (newQuantity > stockQuantity) {
+                                showAlert("Sorry, not enough stock!");
+                                return;
+                            }
+
+                            // Update the quantity if it's valid
                             if (newQuantity >= 1) {
                                 quantityInput.value = newQuantity;
                             }
                         }
-                        
+
                         function updateQuantityFromInput(input) {
                             var currentQuantity = parseInt(input.value);
+                            var stockQuantity = parseInt(input.getAttribute("data-stock"));
+
                             if (currentQuantity < 1) {
                                 input.value = 1;
+                            } else if (currentQuantity > stockQuantity) {
+                                showAlert("Sorry, not enough stock!");
+                                input.value = stockQuantity; // Reset to max available stock
                             }
                         }
+
                         </script>
                         
                         

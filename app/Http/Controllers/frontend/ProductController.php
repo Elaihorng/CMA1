@@ -17,11 +17,11 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::with('category');
+        $query = Product::with('category')->where('stock_quantity', '>', 0);
     
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->input('search');
-        
+    
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'LIKE', "%{$search}%")
                   ->orWhere('description', 'LIKE', "%{$search}%")
@@ -31,15 +31,10 @@ class ProductController extends Controller
             });
         }
     
-        // Fetch the results with applied search (do not overwrite)
         $products = $query->get();
-    
-        // Optionally, handle the cart here
-        // $cart = session()->get('cart', []);
     
         return view('frontend.products.index', compact('products'));
     }
-    
     
     
    

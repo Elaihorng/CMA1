@@ -33,10 +33,10 @@
                             <strong>Order Number:</strong> {{ $orders->order_number }}
                         </div>
                         <div class="mb-3">
-                            <strong>Total Amount:</strong> ${{ number_format($orders->total_price, 2) }}
+                            <strong>Total Amount:</strong> ${{ number_format($orders->total_amount, 2) }}
                         </div>
                         <div class="mb-3">
-                            <strong>Delivery Method:</strong> {{ ucfirst($orders->delivery_method) }}
+                            <strong>Delivery Method:</strong> {{ ucfirst($orders->shipping_method) }}
                         </div>
                         <div class="mb-3">
                             <strong>Status:</strong> {{ ucfirst($orders->status) }}
@@ -60,7 +60,7 @@
                                 @foreach ($orders->orderItems as $item)
                                     <tr>
                                         <td>
-                                            <img src="{{ asset('storage/product_images/' . $item->product->image) }}" width="50" alt="{{ $item->product->name }}">
+                                            <img src="{{ asset('/uploads/product/'. $item->product->image_url) }}" width="50" alt="{{ $item->product->name }}">
                                         </td>
                                         <td>{{ $item->product->name }}</td>
                                         <td>{{ $item->quantity }}</td>

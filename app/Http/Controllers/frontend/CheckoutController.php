@@ -144,7 +144,7 @@ class CheckoutController extends Controller
                 $order->status = 'confirmed';
                 $order->save();
                 Mail::to($order->email)->send(new OrderConfirmedMail($order));
-                return redirect()->route('frontend.orders.index')->with('success', 'Order placed successfully!');
+                return redirect()->route('frontend.checkout.success')->with('success', 'Order placed successfully!');
             }
     
         } catch (Exception $e) {

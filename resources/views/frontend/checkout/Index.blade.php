@@ -91,7 +91,7 @@
                         <h5 class="mt-3">Payment Method</h5>
                         <div class="mb-3">
                             <input type="radio" id="visa" name="payment_method" value="STRIPE">
-                            <label for="visa">Pay with Visa (ABA)</label><br>
+                            <label for="visa">Pay with Visa</label><br>
                             <input type="radio" id="cash" name="payment_method" value="CASH"checked>
                             <label for="cash">Pay with Cash</label>
                         </div>

@@ -28,13 +28,12 @@
                 @endfor
                 <span class="ms-2">({{ $product->reviews->count() }} Reviews)</span>
             </div>
-
             <form action="{{ route('frontend.cart.add') }}" method="POST" class="d-flex justify-content-between align-items-center" id="add-to-cart-form">
                 @csrf
                 <div class="input-group">
-                    <button type="button" class="btn btn-update btn-sm" onclick="updateQuantity(-1)">-</button>
-                    <input type="number" name="quantity" id="quantity-input" value="1" min="1" class="form-control input-quantity" onchange="updateQuantityFromInput(this)" readonly>
-                    <button type="button" class="btn btn-update btn-sm" onclick="updateQuantity(1)">+</button>
+                    <button type="button" class="btn btn-update btn-sm" onclick="updateQuantity(this, -1)">-</button>
+                    <input type="number" name="quantity" id="quantity-input" value="1" min="1" class="form-control input-quantity" onchange="updateQuantityFromInput(this)" data-stock="{{ $product->stock_quantity }}">
+                    <button type="button" class="btn btn-update btn-sm" onclick="updateQuantity(this, 1)">+</button>
                 </div>
                 <input type="hidden" name="product_id" value="{{ $product->product_id }}">
                 <button type="button" class="btn btn-success w-100 position-relative d-flex align-items-center justify-content-center add-to-cart-btn" onclick="checkLoginAndAddToCart()">
@@ -42,6 +41,7 @@
                     <i class="fas fa-cart-plus ms-3" style="font-size: 18px;"></i>
                 </button>
             </form>
+            
             
             <!-- Modal message -->
             <div id="login-message" class="modal-message">
@@ -53,7 +53,12 @@
                     </div>
                 </div>
             </div>
-            
+            <div id="custom-alert" class="alert-overlay">
+                <div class="alert-box">
+                    <p id="alert-message"></p>
+                    <button onclick="closeAlert()">Close</button>
+                </div>
+            </div>
             <style>
                 /* Modal message styles */
                 .modal-message {
@@ -95,25 +100,102 @@
             
             <script>
                 function checkLoginAndAddToCart() {
-                    @if(Auth::check())
-                        // If user is logged in, submit the form
-                        document.getElementById('add-to-cart-form').submit();
-                    @else
-                        // Show the modal message
-                        var messageBox = document.getElementById('login-message');
-                        messageBox.style.display = 'flex';  // Show the modal
-                    @endif
+                    const form = document.getElementById('add-to-cart-form');
+                    const quantity = parseInt(document.getElementById('quantity-input').value);
+                    const productId = form.querySelector('input[name="product_id"]').value;
+
+                    // Check stock via AJAX
+                    fetch('{{ route('frontend.cart.check-stock') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            product_id: productId,
+                            quantity: quantity
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.stock_available) {
+                            @if(Auth::check())
+                                form.submit();
+                            @else
+                                showLoginModal();
+                            @endif
+                        } else {
+                            showAlert("Sorry, not enough stock available!");
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Stock check failed:', error);
+                    });
                 }
-            
+
+                function showAlert(message) {
+                    var alertBox = document.getElementById("custom-alert");
+                    var alertMessage = document.getElementById("alert-message");
+                    alertMessage.innerText = message;
+                    alertBox.style.display = 'flex';
+                }
+
+                function closeAlert() {
+                    var alertBox = document.getElementById("custom-alert");
+                    alertBox.style.display = 'none';
+                }
+
+                function updateQuantity(button, amount) {
+                    var quantityInput = button.parentElement.querySelector(".input-quantity");
+                    var currentQuantity = parseInt(quantityInput.value);
+                    var stockQuantity = parseInt(quantityInput.getAttribute("data-stock")); // Get stock quantity from data-stock
+
+                    var newQuantity = currentQuantity + amount;
+
+                    // Check if new quantity exceeds stock quantity
+                    if (newQuantity > stockQuantity) {
+                        showAlert("Sorry, not enough stock!");
+                        return;
+                    }
+
+                    // Update the quantity if it's valid
+                    if (newQuantity >= 1) {
+                        quantityInput.value = newQuantity;
+                    }
+                }
+
+                function updateQuantityFromInput(input) {
+                    var currentQuantity = parseInt(input.value);
+                    var stockQuantity = parseInt(input.getAttribute("data-stock"));
+
+                    if (currentQuantity < 1) {
+                        input.value = 1;
+                    } else if (currentQuantity > stockQuantity) {
+                        showAlert("Sorry, not enough stock!");
+                        input.value = stockQuantity; // Reset to max available stock
+                    }
+                }
+
+                function showLoginModal() {
+                    const messageBox = document.getElementById('login-message');
+                    if (messageBox) {
+                        messageBox.style.display = 'flex';
+                    }
+                }
+
                 function closeModal() {
-                    var messageBox = document.getElementById('login-message');
-                    messageBox.style.display = 'none';  // Hide the modal
+                    const messageBox = document.getElementById('login-message');
+                    if (messageBox) {
+                        messageBox.style.display = 'none';
+                    }
                 }
-            
+
                 function redirectToLogin() {
-                    window.location.href = "{{ route('login') }}";  // Redirect to the login page
+                    window.location.href = "{{ route('login') }}";
                 }
+
             </script>
+            
              
             
         </div>

@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\backend;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\SendOtpMail;
 use App\Models\Role;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -22,6 +24,10 @@ class AuthController extends Controller
     public function register()
     {
         return view('backend.auth.register');
+    }
+    public function forget()
+    {
+        return view('backend.auth.forget');
     }
 
     public function showOtpForm()
@@ -104,7 +110,7 @@ class AuthController extends Controller
         $customerRole = Role::where('name', 'customer')->first();
         if ($customerRole) {
             $user->roles()->attach($customerRole->id);
-        }
+        } 
     
         // Clear OTP session
         session()->forget('registration_data');
@@ -115,7 +121,7 @@ class AuthController extends Controller
     
         session(['username' => $user->name]);
     
-        return redirect()->route('home')->with('success', 'OTP Verified! Account created and you are now logged in.');
+        return redirect('/')->with('success', 'OTP Verified! Account created and you are now logged in.');
     }
 
     public function loginAction(Request $request)
@@ -149,7 +155,7 @@ class AuthController extends Controller
         if ($role && $role->name == 'admin') {
             return redirect()->route('dashboard.index')->with('success', 'Welcome to the admin dashboard!');
         } elseif ($role && $role->name == 'customer') {
-            return redirect()->route('home')->with('success', 'Welcome to the customer home page!');
+            return redirect('/')->with('success', 'Welcome to the customer home page!');
         }
         
         return redirect()->route('login')->withErrors('Role not found!');
@@ -199,12 +205,69 @@ class AuthController extends Controller
         $roles = Role::all(); // 
         return view('backend.user.edit', compact('user','roles'));
     }
+
+    public function handleForget(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users,email',
+        ]);
+    
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+    
+        return $status === Password::RESET_LINK_SENT
+            ? back()->with('status', __($status))
+            : back()->withErrors(['email' => __($status)]);
+    }
+    
+    public function showResetForm($token)
+    {
+        return view('backend.auth.recover', ['token' => $token]);
+    }
+    public function submitReset(Request $request)
+    {
+        // Log the incoming request data for debugging
+        Log::info('Password Reset Request:', $request->all());
+    
+        // Validate the form data
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required', // Make sure password is valid
+            'token' => 'required',
+        ]);
+    
+        // Attempt to reset the password
+        $status = Password::reset(
+            $request->only('email', 'password', 'token'),
+            function ($user, $password) {
+                // Update the user's password
+                $user->password = $password;
+                $user->save();
+            }
+        );
+    
+        // Log the reset status for debugging
+        Log::info('Password Reset Status', ['status' => $status]);
+    
+        // Check if the password was successfully reset
+        if ($status === Password::PASSWORD_RESET) {
+            return redirect()->route('login')->with('status', 'Password has been reset successfully!');
+        } else {
+            return back()->withErrors(['email' => 'Failed to reset password.']);
+        }
+    }
+    
+    
+    
+    
+    
     public function update(Request $request, $id)
     {
         // Validate the request data
         $validated = $request->validate([
             'name' => 'required|max:255',
-            'email' => 'required|email|unique:users,email,' . $id, // Ensure unique email for the user
+            'email' => 'required|email|unique:users,email,' . $id.',user_id', // Ensure unique email for the user
             'password' => 'nullable|min:8|confirmed', // If provided, must match the confirmation
             'role' => 'required|exists:roles,name', // Role must exist in the roles table
         ]);
@@ -239,8 +302,9 @@ class AuthController extends Controller
         }
     
         // Redirect back to the edit page with a success message
-        return redirect()->route('user.edit', $user->id)->with('alert_message', 'User updated successfully!');
+        return redirect()->route('user.edit', $user->user_id)->with('alert_message', 'User updated successfully!');
     }
+
 
     public function destroy(string $id)
     {

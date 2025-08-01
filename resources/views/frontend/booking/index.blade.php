@@ -19,7 +19,7 @@
                     @component('components.alert')
               
                     @endcomponent
-                    <form action="{{ route('frontend.booking.store') }}" method="POST">
+                    <form action="{{ route('booking.store') }}" method="POST">
                         @csrf
                         <div class="row g-3">
                             <div class="col-12 col-sm-6">
