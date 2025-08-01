@@ -1,5 +1,5 @@
 <?php
-use App\Http\Controllers\Frontend\HomeController;
+use App\Http\Controllers\frontend\HomeController;
 use App\Http\Controllers\frontend\PageController;
 use App\Http\Controllers\frontend\ProductController;
 use App\Http\Controllers\frontend\CartController;
